@@ -10,6 +10,7 @@ import UserDetail from './pages/UserDetail';
 import ProtectedRoute from './components/ProtectedRoute';
 import Test from './pages/test';
 import './App.css';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -28,6 +29,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/adminDashboard" 
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
                   </ProtectedRoute>
                 } 
               />
