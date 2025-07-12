@@ -24,7 +24,7 @@ exports.getMySwapRequests = async (req, res) => {
     const requests = await SwapRequest.find({
       $or: [{ sender: req.user._id }, { receiver: req.user._id }]
     })
-      .populate('sender receiver skillOffered skillRequested')
+      //.populate('sender receiver skillOffered skillRequested')
       .sort({ createdAt: -1 });
 
     res.json({ requests });
@@ -36,14 +36,18 @@ exports.getMySwapRequests = async (req, res) => {
 exports.getAllSwapRequests = async (req, res) => {
   try {
     const requests = await SwapRequest.find()
-      .populate('sender receiver skillOffered skillRequested')
+      .populate('sender', 'name email')
+      .populate('receiver', 'name email')
+      // .populate('skillOffered skillRequested') remove if Skill model exists
       .sort({ createdAt: -1 });
 
     res.json({ requests });
   } catch (error) {
+    console.error('[ADMIN] Swap Fetch Error:', error.message); // log the real error
     res.status(500).json({ error: 'Failed to fetch swap requests' });
   }
 };
+
 
 exports.deleteSwapRequest = async (req, res) => {
   try {
