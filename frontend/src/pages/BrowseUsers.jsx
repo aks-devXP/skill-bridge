@@ -1,11 +1,21 @@
 import { useState, useEffect } from 'react';
-import { User, MapPin, Star, Search } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Filter, X } from 'lucide-react';
+import UserCard from '../components/UserCard';
 
 const BrowseUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterSkill, setFilterSkill] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [filters, setFilters] = useState({
+    availability: 'all',
+    minRating: 0,
+    location: 'all',
+    minSwaps: 0,
+    maxSwaps: 100
+  });
+  const usersPerPage = 3;
 
   // Mock data for now - will be replaced with API calls
   useEffect(() => {
@@ -15,32 +25,90 @@ const BrowseUsers = () => {
         {
           id: 1,
           name: 'John Doe',
-          location: 'New York, NY',
+          location: 'United States',
           skillsOffered: ['JavaScript', 'React', 'Node.js'],
           skillsWanted: ['Python', 'Machine Learning'],
           rating: 4.5,
           totalRatings: 12,
-          completedSwaps: 8
+          completedSwaps: 8,
+          availability: 'available'
         },
         {
           id: 2,
           name: 'Jane Smith',
-          location: 'San Francisco, CA',
+          location: 'Canada',
           skillsOffered: ['Python', 'Data Analysis', 'SQL'],
           skillsWanted: ['Web Design', 'UI/UX'],
           rating: 4.8,
           totalRatings: 15,
-          completedSwaps: 12
+          completedSwaps: 12,
+          availability: 'available'
         },
         {
           id: 3,
           name: 'Mike Johnson',
-          location: 'Chicago, IL',
+          location: 'United Kingdom',
           skillsOffered: ['Graphic Design', 'Photoshop', 'Illustrator'],
           skillsWanted: ['JavaScript', 'Web Development'],
           rating: 4.2,
           totalRatings: 8,
-          completedSwaps: 5
+          completedSwaps: 5,
+          availability: 'busy'
+        },
+        {
+          id: 4,
+          name: 'Sarah Wilson',
+          location: 'Australia',
+          skillsOffered: ['UI/UX Design', 'Figma', 'Prototyping'],
+          skillsWanted: ['React', 'Frontend Development'],
+          rating: 2.6,
+          totalRatings: 9,
+          completedSwaps: 6,
+          availability: 'available'
+        },
+        {
+          id: 5,
+          name: 'David Chen',
+          location: 'Germany',
+          skillsOffered: ['Machine Learning', 'Python', 'TensorFlow'],
+          skillsWanted: ['Web Development', 'JavaScript'],
+          rating: 4.9,
+          totalRatings: 18,
+          completedSwaps: 14,
+          availability: 'available'
+        },
+        {
+          id: 6,
+          name: 'Emily Rodriguez',
+          location: 'Spain',
+          skillsOffered: ['Content Writing', 'SEO', 'Social Media'],
+          skillsWanted: ['Graphic Design', 'Adobe Creative Suite'],
+          rating: 4.3,
+          totalRatings: 11,
+          completedSwaps: 7,
+          availability: 'busy'
+        },
+        {
+          id: 7,
+          name: 'Alex Thompson',
+          location: 'Netherlands',
+          skillsOffered: ['DevOps', 'AWS', 'Docker'],
+          skillsWanted: ['Mobile Development', 'React Native'],
+          rating: 4.7,
+          totalRatings: 13,
+          completedSwaps: 9,
+          availability: 'available'
+        },
+        {
+          id: 8,
+          name: 'Lisa Park',
+          location: 'South Korea',
+          skillsOffered: ['Data Science', 'R', 'Statistics'],
+          skillsWanted: ['Web Design', 'CSS', 'HTML'],
+          rating: 4.4,
+          totalRatings: 10,
+          completedSwaps: 6,
+          availability: 'available'
         }
       ]);
       setLoading(false);
@@ -48,13 +116,110 @@ const BrowseUsers = () => {
   }, []);
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSkill = !filterSkill || 
-                        user.skillsOffered.some(skill => skill.toLowerCase().includes(filterSkill.toLowerCase())) ||
-                        user.skillsWanted.some(skill => skill.toLowerCase().includes(filterSkill.toLowerCase()));
-    return matchesSearch && matchesSkill;
+    // Skill filter
+    const matchesSkill = !searchTerm || 
+                        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        user.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        user.skillsOffered.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                        user.skillsWanted.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    // Availability filter
+    const matchesAvailability = filters.availability === 'all' || user.availability === filters.availability;
+    
+    // Rating filter
+    const matchesRating = user.rating >= filters.minRating;
+    
+    // Location filter - case insensitive
+    const specificCountries = [
+      'United States', 'Canada', 'United Kingdom', 'Australia', 
+      'Germany', 'Spain', 'Netherlands', 'South Korea', 'India'
+    ];
+    
+    let matchesLocation = false;
+    if (filters.location === 'all') {
+      matchesLocation = true;
+    } else if (filters.location === 'Other') {
+      // Show users from countries not in the specific list
+      matchesLocation = !specificCountries.includes(user.location);
+    } else {
+      // Exact match for specific countries
+      matchesLocation = user.location.toLowerCase() === filters.location.toLowerCase();
+    }
+    
+    // Swaps filter
+    const matchesSwaps = user.completedSwaps >= filters.minSwaps && user.completedSwaps <= filters.maxSwaps;
+    
+    return matchesSkill && matchesAvailability && matchesRating && matchesLocation && matchesSwaps;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const startIndex = (currentPage - 1) * usersPerPage;
+  const endIndex = startIndex + usersPerPage;
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filters]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showFilterModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showFilterModal]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      availability: 'all',
+      minRating: 0,
+      location: 'all',
+      minSwaps: 0,
+      maxSwaps: 100
+    });
+    setSearchTerm('');
+  };
+
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (searchTerm) count++;
+    if (filters.availability !== 'all') count++;
+    if (filters.minRating > 0) count++;
+    if (filters.location !== 'all') count++;
+    if (filters.minSwaps > 0 || filters.maxSwaps < 100) count++;
+    return count;
+  };
 
   if (loading) {
     return (
@@ -73,81 +238,39 @@ const BrowseUsers = () => {
       </div>
 
       <div className="flex gap-4 mb-8 flex-wrap">
-        <div className="flex-1 min-w-64 relative">
-          <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by name or location..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          />
-        </div>
-        
         <div className="flex-1 min-w-64">
           <input
             type="text"
-            placeholder="Filter by skill..."
-            value={filterSkill}
-            onChange={(e) => setFilterSkill(e.target.value)}
+            placeholder="Search by name, location, or skill..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
           />
         </div>
+        
+        <button
+          onClick={() => setShowFilterModal(true)}
+          className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <Filter size={20} />
+          Filters
+          {getActiveFiltersCount() > 0 && (
+            <span className="bg-blue-600 text-white text-xs rounded-full px-2 py-1">
+              {getActiveFiltersCount()}
+            </span>
+          )}
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredUsers.length > 0 ? (
-          filteredUsers.map(user => (
-            <div key={user.id} className="bg-white p-6 rounded-2xl shadow-sm hover:transform hover:-translate-y-1 transition-all hover:shadow-lg">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-15 h-15 rounded-full bg-gray-100 flex items-center justify-center">
-                  <User size={30} className="text-gray-400" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold mb-1">{user.name}</h3>
-                  <p className="flex items-center gap-1 text-gray-600 text-sm mb-2">
-                    <MapPin size={14} />
-                    {user.location}
-                  </p>
-                  <div className="flex items-center gap-1 text-yellow-500 text-sm">
-                    <Star size={14} />
-                    <span>{user.rating.toFixed(1)} ({user.totalRatings} reviews)</span>
-                  </div>
-                </div>
-              </div>
+      {/* Results count */}
+      <div className="mb-6 text-sm text-gray-600">
+        Showing {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} users
+      </div>
 
-              <div className="space-y-4 mb-6">
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Offers:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {user.skillsOffered.map((skill, index) => (
-                      <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-medium">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Wants to learn:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {user.skillsWanted.map((skill, index) => (
-                      <span key={index} className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-lg text-xs font-medium">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-sm text-gray-600 mb-4">
-                {user.completedSwaps} swaps completed
-              </div>
-
-              <button className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                Connect
-              </button>
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {currentUsers.length > 0 ? (
+          currentUsers.map(user => (
+            <UserCard key={user.id} user={user} />
           ))
         ) : (
           <div className="col-span-full text-center py-12">
@@ -155,6 +278,165 @@ const BrowseUsers = () => {
           </div>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+            className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer transition-colors"
+          >
+            <ChevronLeft size={16} />
+            Previous
+          </button>
+
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, index) => {
+              const pageNumber = index + 1;
+              return (
+                <button
+                  key={pageNumber}
+                  onClick={() => handlePageChange(pageNumber)}
+                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors hover:cursor-pointer ${
+                    currentPage === pageNumber
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {pageNumber}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer transition-colors"
+          >
+            Next
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      )}
+
+      {/* Filter Modal */}
+      {showFilterModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold">Filter Users</h2>
+              <button
+                onClick={() => setShowFilterModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Availability Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Availability
+                </label>
+                <select
+                  value={filters.availability}
+                  onChange={(e) => handleFilterChange('availability', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">All Users</option>
+                  <option value="available">Available</option>
+                  <option value="busy">Busy</option>
+                </select>
+              </div>
+
+              {/* Rating Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Minimum Rating
+                </label>
+                <select
+                  value={filters.minRating}
+                  onChange={(e) => handleFilterChange('minRating', Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value={0}>Any Rating</option>
+                  <option value={1}>1+ Stars</option>
+                  <option value={2}>2+ Stars</option>
+                  <option value={3}>3+ Stars</option>
+                  <option value={4}>4+ Stars</option>
+                  <option value={4.5}>4.5+ Stars</option>
+                </select>
+              </div>
+
+              {/* Location Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Country
+                </label>
+                <select
+                  value={filters.location}
+                  onChange={(e) => handleFilterChange('location', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">All Countries</option>
+                  <option value="United States">United States</option>
+                  <option value="Canada">Canada</option>
+                  <option value="United Kingdom">United Kingdom</option>
+                  <option value="Australia">Australia</option>
+                  <option value="Germany">Germany</option>
+                  <option value="Spain">Spain</option>
+                  <option value="Netherlands">Netherlands</option>
+                  <option value="South Korea">South Korea</option>
+                  <option value="India">India</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              {/* Swaps Range Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Completed Swaps Range
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    value={filters.minSwaps}
+                    onChange={(e) => handleFilterChange('minSwaps', Number(e.target.value))}
+                    className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                  <span className="text-gray-500 text-sm">to</span>
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    value={filters.maxSwaps}
+                    onChange={(e) => handleFilterChange('maxSwaps', Number(e.target.value))}
+                    className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-8">
+              <button
+                onClick={clearFilters}
+                className="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Clear All
+              </button>
+              <button
+                onClick={() => setShowFilterModal(false)}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
