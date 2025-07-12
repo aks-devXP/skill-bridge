@@ -29,6 +29,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Routes
 const authRoutes = require('./routes/auth');
+const swapRoutes = require('./routes/swap');
 
 // Basic route
 app.get('/', (req, res) => {
@@ -49,6 +50,11 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+
+// For swapping requests
+//const swapRoutes = require('./routes/swap');
+app.use('/api/swaps', swapRoutes);
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
