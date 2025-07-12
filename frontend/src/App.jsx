@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import BrowseUsers from './pages/BrowseUsers';
 import ProtectedRoute from './components/ProtectedRoute';
+import Test from './pages/test';
 import './App.css';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/test" element={<Test />} />
               <Route 
                 path="/profile" 
                 element={
