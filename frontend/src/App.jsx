@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import BrowseUsers from './pages/BrowseUsers';
+import UserDetail from './pages/UserDetail';
 import ProtectedRoute from './components/ProtectedRoute';
 import Test from './pages/test';
 import './App.css';
@@ -31,6 +32,7 @@ function App() {
                 } 
               />
               <Route path="/browse" element={<BrowseUsers />} />
+              <Route path="/user/:userId" element={<UserDetail />} />
             </Routes>
           </main>
         </div>
