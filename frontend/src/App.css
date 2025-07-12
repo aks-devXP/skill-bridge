@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+/* Custom styles that can't be easily replaced with Tailwind */
+.loading-spinner {
+  @apply w-10 h-10 border-3 border-gray-200 border-t-blue-500 rounded-full animate-spin;
+}
+
+/* Custom animations */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Gradient text for logo */
+.logo-text {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+} 

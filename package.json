@@ -1,0 +1,34 @@
+{
+  "name": "skillbridge",
+  "version": "1.0.0",
+  "description": "SkillBridge - A platform for skill exchange among users",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && npm start",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "skillbridge",
+    "mern",
+    "react",
+    "express",
+    "mongodb",
+    "skill-exchange"
+  ],
+  "author": "SkillBridge Team",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "dependencies": {
+  }
+}
